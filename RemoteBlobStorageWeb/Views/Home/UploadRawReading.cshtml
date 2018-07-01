@@ -1,0 +1,41 @@
+﻿
+@{
+
+    ViewBag.Title = "Logs";
+
+}
+
+<div>
+    <h1>Upload raw libre reading</h1>
+    <p>
+    </p>
+
+    @using (Html.BeginForm("CreateRequestAsync", "Api", FormMethod.Post))
+    {
+        <table>
+            <tr>
+                <td><label for="accesstoken">Accesstoken:</label> </td>
+                <td><input type="text" id="accesstoken" name="accesstoken" size="40" /></td>
+            </tr>
+            <tr>
+                <td><label for="contents">Contents</label> </td>
+                <td><textarea name="contents" id="contents" rows="20" cols="100"></textarea></td>
+            </tr>
+
+        </table>
+
+
+       
+        <input type="submit" value="Submit contents" />
+    }
+</div>
+
+
+
+
+@section Scripts {
+    <script>
+
+
+    </script>
+}
