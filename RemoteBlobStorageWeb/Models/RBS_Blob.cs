@@ -26,6 +26,6 @@ namespace RBS.Models
         public string uuid { get; set; }
         public string contents { get; set; }
         public string purpose { get; set; }
-
+        public string tag { get; set; }
     }
 }

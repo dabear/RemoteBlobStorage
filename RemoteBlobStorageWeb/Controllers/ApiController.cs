@@ -44,7 +44,7 @@ namespace RBS.Controllers
                 JsonRequestBehavior.AllowGet);
         } 
        
-        public async Task<ActionResult> CreateRequestAsync(string accesstoken, string contents ){
+        public async Task<ActionResult> CreateRequestAsync(string accesstoken, string contents, string tag ){
 
             //var permissions= await NightscoutPermissions.CheckUploadPermissions(accesstoken);
             //var permissions = await NightscoutPermissions.CheckProcessPermissions(accesstoken);
@@ -68,7 +68,8 @@ namespace RBS.Controllers
                 ModifiedOn = DateTime.Now,
                 contents = contents,
                 uuid = g,
-                purpose = "RBS"
+                purpose = "RBS",
+                tag = string.IsNullOrWhiteSpace(tag) ? null : tag.Substring(0,10)
 
 
             };
