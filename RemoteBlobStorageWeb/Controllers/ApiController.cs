@@ -42,9 +42,17 @@ namespace RBS.Controllers
                     Result = result
                 },
                 JsonRequestBehavior.AllowGet);
-        } 
-       
-        public async Task<ActionResult> CreateRequestAsync(string accesstoken, string contents, string tag ){
+        }
+
+        public async Task<ActionResult> DeleteExpiredAsync() {
+            //no auth needed here
+            var expirationDate = DateTime.Now.AddDays(-2);
+            var deleteCount = await MongoConnection.RemoveExpired(expirationDate);
+            return Content("deleted: " + deleteCount + " entries older than " + expirationDate.ToString(), "text/plain");
+        }
+
+
+        public async Task<ActionResult> CreateRequestAsync(string accesstoken, string contents, string tag, string deletepolicy ){
 
             //var permissions= await NightscoutPermissions.CheckUploadPermissions(accesstoken);
             //var permissions = await NightscoutPermissions.CheckProcessPermissions(accesstoken);
@@ -59,6 +67,7 @@ namespace RBS.Controllers
                 return this.Error("CreateRequestAsync Denied: invalid parameter contents");
             }
 
+
            
 
             var g = Guid.NewGuid().ToString();
@@ -69,7 +78,8 @@ namespace RBS.Controllers
                 contents = contents,
                 uuid = g,
                 purpose = "RBS",
-                tag = string.IsNullOrWhiteSpace(tag) ? null : tag.Substring(0,Math.Min(tag.Length,10))
+                tag = string.IsNullOrWhiteSpace(tag) ? null : tag.Substring(0, Math.Min(tag.Length, 10)),
+                deletePolicy = deletepolicy == "autodelete" ? "auto" : null
 
 
             };
@@ -88,7 +98,52 @@ namespace RBS.Controllers
             //return Content("CreateRequestAsync IS NOT IMPLEMENTED YET:" + content);    
         }
 
+        public async Task<ActionResult> FetchTaggedContents(string accesstoken, string tag, string recentSinceSecondsAgo) {
+            if (!await this.checkUploadPermissions(accesstoken))
+            {
+                return this.Error("FetchTaggedContents Denied");
+            }
+            if (string.IsNullOrWhiteSpace(tag))
+            {
+                return this.Error("FetchTaggedContents Denied: invalid parameter tag");
+            }
 
+            if (string.IsNullOrWhiteSpace(recentSinceSecondsAgo) || recentSinceSecondsAgo == "0")
+            {
+                return this.Error("FetchTaggedContents Denied: invalid parameter recentSinceSecondsAgo, must be non-zero");
+            }
+
+            List<RBS_Blob> readings;
+
+            var now = DateTime.Now;
+
+    
+            long sinceWhen = 0;
+            Int64.TryParse(recentSinceSecondsAgo, out sinceWhen);
+            now.AddSeconds(-sinceWhen);
+
+
+
+            try
+            {
+                readings = await MongoConnection.GetTaggedReadings(tag, now.AddSeconds(-sinceWhen) );
+            }
+            catch (Exception ex)
+            {
+                return Error("FetchTaggedContents Failed: " + ex.Message);
+            }
+            if (readings.Count == 0) {
+                return Content("no tagged contents", "text/plain");
+            }
+
+            var result = "";
+
+            foreach (var item in readings)
+            {
+                result += $"{item.ModifiedOn}|{item.contents}|{item.tag}\r\n";
+            }
+            return Content(result, "text/plain");
+        }
 
 
         public async Task<ActionResult> FetchContents(string accesstoken){
@@ -111,7 +166,7 @@ namespace RBS.Controllers
            
             foreach (var item in readings)
             {
-                result += $"{item.ModifiedOn}|{item.contents}\r\n";
+                result += $"{item.ModifiedOn}|{item.contents}|{item.tag}\r\n";
             }
             return Content(result, "text/plain");
             //var content = $"processing_accesstoken: {processing_accesstoken}";

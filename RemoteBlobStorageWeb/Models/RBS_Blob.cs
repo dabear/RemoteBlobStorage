@@ -27,5 +27,6 @@ namespace RBS.Models
         public string contents { get; set; }
         public string purpose { get; set; }
         public string tag { get; set; }
+        public string deletePolicy { get; set; }
     }
 }
