@@ -69,7 +69,7 @@ namespace RBS.Controllers
                 contents = contents,
                 uuid = g,
                 purpose = "RBS",
-                tag = string.IsNullOrWhiteSpace(tag) ? null : tag.Substring(0,10)
+                tag = string.IsNullOrWhiteSpace(tag) ? null : tag.Substring(0,Math.Min(tag.Length,10))
 
 
             };
